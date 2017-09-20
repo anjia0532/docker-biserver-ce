@@ -33,7 +33,7 @@ RUN echo "Download and unpack Pentaho server..." \
 		&& tar zxf $BISERVER_HOME/tomcat/bin/tomcat-native.tar.gz \
 		&& cd tomcat-native*/native \
 		&& apk add --no-cache xvfb apr-dev gcc make \
-		&& ./configure --with-apr=/usr/bin/apr-config --disable-openssl --with-java-home=$JAVA_HOME --prefix=$BISERVER_HOME/tomcat \
+		&& ./configure --with-apr=/usr/bin/apr-1-config --disable-openssl --with-java-home=$JAVA_HOME --prefix=$BISERVER_HOME/tomcat \
 		&& make \
 		&& make install \
 		&& sed -i -e 's|\(SSLEngine="\).*\("\)|\1off\2|' \
