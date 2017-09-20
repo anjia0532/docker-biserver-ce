@@ -6,7 +6,7 @@
 FROM bi:7.1-full
 
 # Set maintainer
-MAINTAINER Zhichun Wu <zhicwu@gmail.com>
+MAINTAINER AnJia <anjia0532@gmail.com> Zhichun Wu <zhicwu@gmail.com>
 
 # Set environment variables
 ENV BISERVER_USER=pentaho PDI_PATCH=7.1.0.0 JMX_EXPORTER_VERSION=0.9
@@ -62,11 +62,11 @@ RUN echo "Update server configuration..." \
 			-e 's|\(<ref bean="singleTenantAdminAuthorityName"/>\)|\1\n\t\t\t\t<value>Admin</value>|' pentaho-solutions/system/defaultUser.spring.xml \
 		&& find . -name "*.css"  -type f | xargs sed -i -e 's|http.*googleusercontent\.com||' \
 		&& find . -name "*ga.js" -type f | xargs sed -i -e 's|//www\.google\-analytics\.com||' \
-		&& find . -name "*ga.js" -type f | xargs sed -i -e 's|\?"https\://ssl"\:"http\://www"|?"/":"/"|' \
+		#&& find . -name "*ga.js" -type f | xargs sed -i -e 's|\?"https\://ssl"\:"http\://www"|?"/":"/"|' \
 		&& sed -i -e 's|\(            var xhr = text.createXhr(), header;\)|            url = url.replace(/https:\&name=\\/.*\\/pentaho\\/content\\/([a-zA-Z0-9\\-_]+)\\//mg, "\\$1\&name=");\n\1|' pentaho-solutions/system/common-ui/resources/web/util/require-text/text.js \
 		&& find . -name "jquery.dataTables.js" -type f | xargs sed -i -e 's|\(s.nTHead.parentNode == this\)|(s.nTHead \&\& \1)|' \
 	&& echo "Add Pentaho user..." \
-		&& useradd -Md $BISERVER_HOME -s /bin/bash $BISERVER_USER
+		&& adduser -Hh $BISERVER_HOME -s /bin/sh -D -u 1000 $BISERVER_USER
 
 # Download patches and dependencies
 RUN echo "Download patches and dependencies..." \
