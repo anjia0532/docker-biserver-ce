@@ -18,7 +18,7 @@ LABEL java_server="Pentaho Server $BISERVER_VERSION Community Edition"
 # Install vanilla Pentaho server along with minor changes to configuration
 # FIXME: use multi-stage once https://github.com/docker/hub-feedback/issues/1039 is resolved
 RUN echo "Download and unpack Pentaho server..." \
-		&& apk add --no-cache wget \
+		&& apk add --no-cache --virtual .wget-deps wget \
 		&& wget --progress=dot:giga http://downloads.sourceforge.net/project/pentaho/Business%20Intelligence%20Server/${BISERVER_VERSION}/pentaho-server-ce-${BISERVER_BUILD}.zip \
 		&& unzip -q *.zip \
 		&& rm -f *.zip \
@@ -26,23 +26,23 @@ RUN echo "Download and unpack Pentaho server..." \
 		&& ln -s $BISERVER_HOME /pentaho-server \
 		&& find $BISERVER_HOME -name "*.bat" -delete \
 		&& find $BISERVER_HOME -name "*.exe" -delete \
-		&& chmod +x $BISERVER_HOME/*.sh \
-	&& echo "Install APR for Tomcat..." \
+		&& chmod +x $BISERVER_HOME/*.sh 
+RUN     echo "Install APR for Tomcat..." \
 		&& mkdir /build \
 		&& cd /build \
 		&& tar zxf $BISERVER_HOME/tomcat/bin/tomcat-native.tar.gz \
 		&& cd tomcat-native*/native \
-		&& apk add --no-cache xvfb apr-dev gcc make \
-		&& ./configure --with-apr=/usr/bin/apr-1-config --disable-openssl --with-java-home=$JAVA_HOME --prefix=$BISERVER_HOME/tomcat \
-		&& make \
+		&& apk add --no-cache --virtual .native-build-deps   apr-dev  gcc  libc-dev  make \
+		&& ./configure --with-apr="$(which apr-1-config)" --disable-openssl --with-java-home=$JAVA_HOME --prefix=$BISERVER_HOME/tomcat \
+		&& make -j$(getconf _NPROCESSORS_ONLN)\
 		&& make install \
 		&& sed -i -e 's|\(SSLEngine="\).*\("\)|\1off\2|' \
 			-e 's|\(<Engine name="Catalina" defaultHost="localhost">\)|\1\n      <Valve className="org.apache.catalina.valves.RemoteIpValve" internalProxies=".*" remoteIpHeader="x-forwarded-for" remoteIpProxiesHeader="x-forwarded-by" protocolHeader="x-forwarded-proto" />|' $BISERVER_HOME/tomcat/conf/server.xml \
 		&& cd / \
 		&& rm -rf build $BISERVER_HOME/tomcat/bin/tomcat-native.tar.gz \
-		&& apk del --purge gcc make \
-		&& rm -rf /var/cache/apk/* /tmp/* /var/tmp/* \
-	&& echo "Update server configuration..." \
+		&& apk del .wget-deps .native-build-deps \
+		&& rm -rf /var/cache/apk/* /tmp/* /var/tmp/* 
+RUN echo "Update server configuration..." \
 		&& cd $BISERVER_HOME \
 		&& sed -i -e 's|\(exec ".*"\) start|export LD_LIBRARY_PATH=$BISERVER_HOME/tomcat/lib:$LD_LIBRARY_PATH\n\n\1 run|' tomcat/bin/startup.sh \
 		&& rm -f promptuser.*
