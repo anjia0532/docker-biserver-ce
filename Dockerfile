@@ -18,6 +18,7 @@ LABEL java_server="Pentaho Server $BISERVER_VERSION Community Edition"
 # Install vanilla Pentaho server along with minor changes to configuration
 # FIXME: use multi-stage once https://github.com/docker/hub-feedback/issues/1039 is resolved
 RUN echo "Download and unpack Pentaho server..." \
+		&& apk add --no-cache wget \
 		&& wget --progress=dot:giga http://downloads.sourceforge.net/project/pentaho/Business%20Intelligence%20Server/${BISERVER_VERSION}/pentaho-server-ce-${BISERVER_BUILD}.zip \
 		&& unzip -q *.zip \
 		&& rm -f *.zip \
@@ -31,7 +32,6 @@ RUN echo "Download and unpack Pentaho server..." \
 		&& cd /build \
 		&& tar zxf $BISERVER_HOME/tomcat/bin/tomcat-native.tar.gz \
 		&& cd tomcat-native*/native \
-		&& apk update \
 		&& apk add --no-cache xvfb apr-dev gcc make \
 		&& ./configure --with-apr=/usr/bin/apr-config --disable-openssl --with-java-home=$JAVA_HOME --prefix=$BISERVER_HOME/tomcat \
 		&& make \
